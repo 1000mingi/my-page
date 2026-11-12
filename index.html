@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💥 존잘 민기의 스펙타클 웹페이지 💥</title>
+    <!-- Tailwind CSS (CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Jua & Noto Sans KR -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #0d0614;
+            color: #ffffff;
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+            cursor: default;
+        }
+
+        h1, h2, h3, .font-jua {
+            font-family: 'Jua', sans-serif;
+        }
+
+        /* Canvas for Background & Explosions */
+        #bgCanvas, #fxCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+        }
+        #bgCanvas { z-index: 0; }
+        #fxCanvas { z-index: 9999; }
+
+        /* 3D Card Flip Styling */
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.7s cubic-bezier(0.4, 0.2, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 1.25rem;
+        }
+        .card-back {
+            transform: rotateY(180deg);
+        }
+
+        /* Glassmorphic UI Effect */
+        .glass-panel {
+            background: rgba(26, 16, 40, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 100, 50, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 0 15px rgba(255, 80, 0, 0.15);
+        }
+
+        /* Glow Animations */
+        @keyframes pulseGlow {
+            0%, 100% { filter: drop-shadow(0 0 15px rgba(255, 87, 34, 0.8)); }
+            50% { filter: drop-shadow(0 0 30px rgba(255, 193, 7, 0.9)); }
+        }
+        .glow-title {
+            animation: pulseGlow 2.5s infinite;
+        }
+
+        /* Custom Bounce for Quiz Buttons */
+        .quiz-btn {
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .quiz-btn:active {
+            transform: scale(0.92);
+        }
+
+        /* Confetti / Celebration Modal */
+        .modal-enter {
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="min-h-screen relative selection:bg-orange-500 selection:text-white">
+
+    <!-- Background Canvas (Explosions & Sparkles) -->
+    <canvas id="bgCanvas"></canvas>
+    <!-- Foreground FX Canvas (Mouse Sparks & Click Explosions) -->
+    <canvas id="fxCanvas"></canvas>
+
+    <!-- Main Content Container -->
+    <main class="relative z-10 max-w-4xl mx-auto px-4 py-8 md:py-12 flex flex-col gap-10">
+
+        <!-- 1. Header / Profile Hero Section -->
+        <header class="glass-panel rounded-3xl p-6 md:p-10 text-center relative overflow-hidden">
+            <div class="absolute -top-10 -right-10 w-40 h-40 bg-orange-600/30 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-red-600/30 rounded-full blur-3xl pointer-events-none"></div>
+            
+            <div class="inline-block bg-orange-600/20 border border-orange-500/40 text-orange-300 px-4 py-1.5 rounded-full text-xs md:text-sm font-semibold mb-4 tracking-widest uppercase">
+                🔥 Dynamic Profile Page 🔥
+            </div>
+
+            <h1 class="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-orange-500 to-red-500 glow-title mb-3">
+                존잘 민기
+            </h1>
+            
+            <p class="text-gray-300 text-sm md:text-lg max-w-lg mx-auto leading-relaxed">
+                비주얼 폭발! 매력 폭발! <br class="hidden sm:inline">
+                어디서나 눈에 띄는 존재감의 소유자, 존잘 민기의 공식 소개 페이지입니다 😎
+            </p>
+        </header>
+
+        <!-- 2. Favorite 3 Things Section (Flipping Cards) -->
+        <section class="flex flex-col gap-4">
+            <div class="text-center md:text-left">
+                <h2 class="text-2xl md:text-3xl font-bold text-orange-400 flex items-center justify-center md:justify-start gap-2">
+                    <span>❤️</span> 내가 좋아하는 것 TOP 3
+                </h2>
+                <p class="text-xs md:text-sm text-gray-400 mt-1">카드를 클릭하거나 터치하면 훈훈한 비하인드가 밝혀집니다!</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Card 1: 운동 -->
+                <div class="card perspective-1000 h-64 cursor-pointer" onclick="flipCard(this)">
+                    <div class="card-inner">
+                        <!-- Front -->
+                        <div class="card-front glass-panel p-6 flex flex-col items-center justify-center text-center border-2 border-orange-500/40 hover:border-orange-400 transition-colors">
+                            <div class="text-6xl mb-3">🏋️‍♂️</div>
+                            <h3 class="text-2xl font-bold text-yellow-300">운동</h3>
+                            <span class="mt-4 text-xs bg-orange-500/20 text-orange-300 px-3 py-1 rounded-full border border-orange-500/30">클릭해서 이유 보기</span>
+                        </div>
+                        <!-- Back -->
+                        <div class="card-back glass-panel p-6 flex flex-col items-center justify-center text-center bg-gradient-to-br from-orange-950/90 to-purple-950/90 border-2 border-yellow-500">
+                            <h4 class="text-xl font-bold text-yellow-400 mb-2">왜 좋아할까?</h4>
+                            <p class="text-sm text-gray-200 leading-relaxed">
+                                Sweat is just fat crying! <br>
+                                땀을 흘리며 근육을 키울 때 살아있음을 느낍니다. 건강한 몸으로 완성되는 완벽한 비율!
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2: 치킨 -->
+                <div class="card perspective-1000 h-64 cursor-pointer" onclick="flipCard(this)">
+                    <div class="card-inner">
+                        <!-- Front -->
+                        <div class="card-front glass-panel p-6 flex flex-col items-center justify-center text-center border-2 border-orange-500/40 hover:border-orange-400 transition-colors">
+                            <div class="text-6xl mb-3">🍗</div>
+                            <h3 class="text-2xl font-bold text-yellow-300">치킨</h3>
+                            <span class="mt-4 text-xs bg-orange-500/20 text-orange-300 px-3 py-1 rounded-full border border-orange-500/30">클릭해서 이유 보기</span>
+                        </div>
+                        <!-- Back -->
+                        <div class="card-back glass-panel p-6 flex flex-col items-center justify-center text-center bg-gradient-to-br from-amber-950/90 to-red-950/90 border-2 border-yellow-500">
+                            <h4 class="text-xl font-bold text-yellow-400 mb-2">왜 좋아할까?</h4>
+                            <p class="text-sm text-gray-200 leading-relaxed">
+                                바삭한 튀김옷과 촉촉한 속살의 조화! <br>
+                                치느님은 종교이자 영혼의 안식처입니다. 1인 1닭은 기본, 닭다리는 전부 내 차지!
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3: 집 -->
+                <div class="card perspective-1000 h-64 cursor-pointer" onclick="flipCard(this)">
+                    <div class="card-inner">
+                        <!-- Front -->
+                        <div class="card-front glass-panel p-6 flex flex-col items-center justify-center text-center border-2 border-orange-500/40 hover:border-orange-400 transition-colors">
+                            <div class="text-6xl mb-3">🏠</div>
+                            <h3 class="text-2xl font-bold text-yellow-300">집</h3>
+                            <span class="mt-4 text-xs bg-orange-500/20 text-orange-300 px-3 py-1 rounded-full border border-orange-500/30">클릭해서 이유 보기</span>
+                        </div>
+                        <!-- Back -->
+                        <div class="card-back glass-panel p-6 flex flex-col items-center justify-center text-center bg-gradient-to-br from-indigo-950/90 to-slate-950/90 border-2 border-yellow-500">
+                            <h4 class="text-xl font-bold text-yellow-400 mb-2">왜 좋아할까?</h4>
+                            <p class="text-sm text-gray-200 leading-relaxed">
+                                이불 밖은 위험해! <br>
+                                폭신한 침대에 누워 OTT를 정주행할 때 비로소 진정한 에너지가 완충됩니다. 세상에서 가장 아늑한 보금자리!
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. OX Quiz Section -->
+        <section class="glass-panel rounded-3xl p-6 md:p-8 text-center relative">
+            <h2 class="text-2xl md:text-3xl font-bold text-yellow-400 mb-2">❓ 진실 혹은 거짓 OX 퀴즈</h2>
+            <p class="text-gray-300 text-sm mb-6">아래의 명제를 읽고 솔직하게 정답을 눌러주세요!</p>
+
+            <div class="bg-black/40 border border-orange-500/30 rounded-2xl p-6 max-w-xl mx-auto mb-6">
+                <span class="text-lg md:text-2xl font-extrabold text-white tracking-wide">
+                    "나는 잘생겼어"
+                </span>
+            </div>
+
+            <div class="flex justify-center gap-6">
+                <button onclick="answerQuiz('O')" class="quiz-btn w-24 h-24 md:w-28 md:h-28 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-700 hover:from-green-400 hover:to-emerald-600 text-white font-black text-4xl shadow-lg border-2 border-green-300 flex items-center justify-center active:scale-95">
+                    O
+                </button>
+                <button onclick="answerQuiz('X')" class="quiz-btn w-24 h-24 md:w-28 md:h-28 rounded-2xl bg-gradient-to-br from-red-500 to-rose-700 hover:from-red-400 hover:to-rose-600 text-white font-black text-4xl shadow-lg border-2 border-red-300 flex items-center justify-center active:scale-95">
+                    X
+                </button>
+            </div>
+        </section>
+
+        <!-- 4. Lunch Menu Random Picker Section -->
+        <section class="glass-panel rounded-3xl p-6 md:p-8 text-center relative mb-8">
+            <h2 class="text-2xl md:text-3xl font-bold text-orange-400 mb-2">🍱 오늘의 점심 메뉴 추천</h2>
+            <p class="text-gray-300 text-sm mb-6">오늘 뭐 먹을지 고민이라면? 존잘 민기 추천 메뉴 룰렛!</p>
+
+            <!-- Display Container -->
+            <div class="bg-gradient-to-r from-orange-950/60 via-red-950/60 to-purple-950/60 border-2 border-orange-500/50 rounded-2xl p-6 max-w-md mx-auto mb-6 flex flex-col items-center justify-center min-h-[120px] shadow-inner">
+                <div id="menuIcon" class="text-4xl mb-1 transition-all duration-300">🎲</div>
+                <div id="menuName" class="text-2xl md:text-3xl font-black text-yellow-300 tracking-wider">
+                    버튼을 눌러보세요!
+                </div>
+            </div>
+
+            <button onclick="pickLunchMenu()" class="quiz-btn bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 hover:from-amber-400 hover:to-red-400 text-white font-bold text-lg px-8 py-3.5 rounded-full shadow-lg shadow-orange-500/30 border border-yellow-300/40 flex items-center gap-2 mx-auto">
+                <span>🍱</span> 메뉴 무작위 뽑기!
+            </button>
+        </section>
+
+        <!-- Footer -->
+        <footer class="text-center text-xs text-gray-500 pb-6">
+            © 2026 존잘 민기. All rights reserved. <br>
+            화려한 폭발 효과와 함께 즐겁고 행복한 하루 보내세요! 💥
+        </footer>
+    </main>
+
+    <!-- Quiz Result Modal -->
+    <div id="quizModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm hidden p-4">
+        <div class="glass-panel modal-enter rounded-3xl p-6 md:p-8 max-w-sm w-full text-center border-2 border-yellow-500 shadow-2xl relative">
+            <div id="modalEmoji" class="text-6xl mb-3">🎉</div>
+            <h3 id="modalTitle" class="text-2xl font-bold mb-2 text-yellow-300">정답입니다!</h3>
+            <p id="modalDesc" class="text-gray-200 text-sm md:text-base mb-6">역시 객관적인 시각을 가지셨군요!</p>
+            <button onclick="closeModal()" class="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-400 hover:to-red-400 text-white font-bold py-3 rounded-xl shadow-lg transition-transform active:scale-95">
+                확인
+            </button>
+        </div>
+    </div>
+
+    <script>
+        /* ============================================================
+           1. Background Animation: Cosmic Explosion & Falling Sparkles
+           ============================================================ */
+        const bgCanvas = document.getElementById('bgCanvas');
+        const bgCtx = bgCanvas.getContext('2d');
+        const fxCanvas = document.getElementById('fxCanvas');
+        const fxCtx = fxCanvas.getContext('2d');
+
+        let width, height;
+        function resizeCanvas() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            bgCanvas.width = width;
+            bgCanvas.height = height;
+            fxCanvas.width = width;
+            fxCanvas.height = height;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Background Fireworks & Spark Particles
+        class BackgroundExplosion {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * (height * 0.7);
+                this.radius = 2 + Math.random() * 3;
+                this.color = `hsl(${Math.random() * 45 + 10}, 100%, ${50 + Math.random() * 30}%)`;
+                this.particles = [];
+                const particleCount = 25 + Math.floor(Math.random() * 20);
+                
+                for (let i = 0; i < particleCount; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = 1 + Math.random() * 4;
+                    this.particles.push({
+                        x: this.x,
+                        y: this.y,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed,
+                        alpha: 1,
+                        decay: 0.01 + Math.random() * 0.02,
+                        size: 1.5 + Math.random() * 2.5
+                    });
+                }
+            }
+            update() {
+                let alive = false;
+                this.particles.forEach(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vy += 0.03; // gravity
+                    p.alpha -= p.decay;
+                    if (p.alpha > 0) alive = true;
+                });
+                if (!alive) this.reset();
+            }
+            draw(ctx) {
+                this.particles.forEach(p => {
+                    if (p.alpha <= 0) return;
+                    ctx.save();
+                    ctx.globalAlpha = p.alpha;
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                });
+            }
+        }
+
+        const bgExplosions = Array.from({ length: 8 }, () => new BackgroundExplosion());
+
+        function animateBackground() {
+            bgCtx.fillStyle = 'rgba(13, 6, 20, 0.25)';
+            bgCtx.fillRect(0, 0, width, height);
+
+            bgExplosions.forEach(exp => {
+                exp.update();
+                exp.draw(bgCtx);
+            });
+
+            requestAnimationFrame(animateBackground);
+        }
+        animateBackground();
+
+
+        /* ============================================================
+           2. Foreground Interaction: Sparkle Trail & One-time Click Explosion
+           ============================================================ */
+        let mouseTrail = [];
+        let clickExplosion = null; // Holds active single click explosion
+
+        // Sparkle Trail on Mousemove/Touchmove
+        function createSparkle(x, y) {
+            for (let i = 0; i < 2; i++) {
+                mouseTrail.push({
+                    x: x + (Math.random() - 0.5) * 10,
+                    y: y + (Math.random() - 0.5) * 10,
+                    vx: (Math.random() - 0.5) * 1.5,
+                    vy: (Math.random() - 0.5) * 1.5 - 0.5,
+                    size: Math.random() * 3 + 1,
+                    alpha: 1,
+                    color: `hsl(${Math.random() * 50 + 20}, 100%, 70%)`
+                });
+            }
+        }
+
+        window.addEventListener('mousemove', (e) => {
+            createSparkle(e.clientX, e.clientY);
+        });
+
+        window.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 0) {
+                createSparkle(e.touches[0].clientX, e.touches[0].clientY);
+            }
+        }, { passive: true });
+
+        // Trigger SINGLE explosion on click/tap anywhere
+        window.addEventListener('click', (e) => {
+            triggerClickExplosion(e.clientX, e.clientY);
+        });
+
+        function triggerClickExplosion(cx, cy) {
+            const particles = [];
+            const count = 40; // Vibrant single burst
+            const colors = ['#FFD700', '#FF5722', '#FF1744', '#FF9800', '#FFFFFF'];
+
+            for (let i = 0; i < count; i++) {
+                const angle = (Math.PI * 2 / count) * i + Math.random() * 0.2;
+                const speed = 3 + Math.random() * 6;
+                particles.push({
+                    x: cx,
+                    y: cy,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    size: Math.random() * 4 + 2,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    alpha: 1,
+                    decay: 0.02 + Math.random() * 0.025
+                });
+            }
+
+            // Store single click explosion
+            clickExplosion = particles;
+        }
+
+        // Loop for Foreground FX Canvas
+        function animateFX() {
+            fxCtx.clearRect(0, 0, width, height);
+
+            // 1. Draw & Update Mouse Trail
+            for (let i = mouseTrail.length - 1; i >= 0; i--) {
+                const p = mouseTrail[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.alpha -= 0.03;
+
+                if (p.alpha <= 0) {
+                    mouseTrail.splice(i, 1);
+                    continue;
+                }
+
+                fxCtx.save();
+                fxCtx.globalAlpha = p.alpha;
+                fxCtx.fillStyle = p.color;
+                fxCtx.beginPath();
+                fxCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                fxCtx.fill();
+                fxCtx.restore();
+            }
+
+            // 2. Draw & Update Click Explosion (If active)
+            if (clickExplosion) {
+                let stillAlive = false;
+                clickExplosion.forEach(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vy += 0.12; // gravity effect
+                    p.alpha -= p.decay;
+
+                    if (p.alpha > 0) {
+                        stillAlive = true;
+                        fxCtx.save();
+                        fxCtx.globalAlpha = p.alpha;
+                        fxCtx.fillStyle = p.color;
+                        fxCtx.beginPath();
+                        fxCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                        fxCtx.fill();
+                        fxCtx.restore();
+                    }
+                });
+
+                if (!stillAlive) {
+                    clickExplosion = null; // Explosion finished!
+                }
+            }
+
+            requestAnimationFrame(animateFX);
+        }
+        animateFX();
+
+
+        /* ============================================================
+           3. UI Logic: Card Flip
+           ============================================================ */
+        function flipCard(cardElem) {
+            cardElem.classList.toggle('flipped');
+        }
+
+
+        /* ============================================================
+           4. UI Logic: OX Quiz
+           ============================================================ */
+        const quizModal = document.getElementById('quizModal');
+        const modalEmoji = document.getElementById('modalEmoji');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalDesc = document.getElementById('modalDesc');
+
+        function answerQuiz(userAnswer) {
+            quizModal.classList.remove('hidden');
+
+            if (userAnswer === 'O') {
+                // Correct answer celebration!
+                modalEmoji.textContent = '🥳💥';
+                modalTitle.textContent = '정답입니다!🎉';
+                modalTitle.className = 'text-2xl font-bold mb-2 text-yellow-300';
+                modalDesc.textContent = '역시 올바른 눈을 가지셨군요! 민기의 잘생김은 과학입니다. 축하합니다!';
+                
+                // Create bonus confetti burst on center
+                triggerClickExplosion(window.innerWidth / 2, window.innerHeight / 2);
+            } else {
+                // Incorrect answer
+                modalEmoji.textContent = '😭💔';
+                modalTitle.textContent = '아쉽네요...';
+                modalTitle.className = 'text-2xl font-bold mb-2 text-red-400';
+                modalDesc.textContent = '안과 검진이 필요할지도 몰라요! 다시 한 번 신중하게 생각해보세요 🥲';
+            }
+        }
+
+        function closeModal() {
+            quizModal.classList.add('hidden');
+        }
+
+
+        /* ============================================================
+           5. UI Logic: Random Lunch Menu Picker (10+ Options)
+           ============================================================ */
+        const lunchMenus = [
+            { name: "황금빛 후라이드 치킨", icon: "🍗" },
+            { name: "매콤달콤 떡볶이 & 튀김", icon: "🥘" },
+            { name: "육즙가득 수제 햄버거", icon: "🍔" },
+            { name: "얼큰한 삼겹살 김치찌개", icon: "🍲" },
+            { name: "갓 구운 페퍼로니 피자", icon: "🍕" },
+            { name: "정통 일식 돈까스", icon: "🍱" },
+            { name: "진한 차돌박이 짬뽕", icon: "🍜" },
+            { name: "신선한 연어 초밥", icon: "🍣" },
+            { name: "불향 가득 든든한 족발", icon: "🍖" },
+            { name: "고소한 짜장면과 탕수육", icon: "🥢" },
+            { name: "신선한 육회 비빔밥", icon: "🥣" },
+            { name: "담백하고 고소한 평양냉면", icon: "🧊" }
+        ];
+
+        let isRolling = false;
+
+        function pickLunchMenu() {
+            if (isRolling) return;
+            isRolling = true;
+
+            const menuName = document.getElementById('menuName');
+            const menuIcon = document.getElementById('menuIcon');
+
+            let counter = 0;
+            const maxCycles = 15;
+            const interval = setInterval(() => {
+                const randomItem = lunchMenus[Math.floor(Math.random() * lunchMenus.length)];
+                menuName.textContent = randomItem.name;
+                menuIcon.textContent = randomItem.icon;
+                
+                // Pulsing animation during roll
+                menuIcon.style.transform = `scale(${1 + (counter % 2) * 0.2})`;
+
+                counter++;
+                if (counter >= maxCycles) {
+                    clearInterval(interval);
+                    
+                    // Final Selection
+                    const finalChoice = lunchMenus[Math.floor(Math.random() * lunchMenus.length)];
+                    menuName.textContent = finalChoice.name;
+                    menuIcon.textContent = finalChoice.icon;
+                    menuIcon.style.transform = 'scale(1.3)';
+
+                    setTimeout(() => {
+                        menuIcon.style.transform = 'scale(1)';
+                    }, 300);
+
+                    isRolling = false;
+                }
+            }, 80);
+        }
+    </script>
+</body>
+</html>
